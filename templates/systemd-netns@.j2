@@ -1,0 +1,33 @@
+[Unit]
+Description=Named network namespace %I
+Documentation=https://github.com/openstack/ansible-role-systemd_service
+After=syslog.target
+After=network.target
+
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+PrivateNetwork=yes
+BindPaths=/etc/netns/%I/resolv.conf:/etc/resolv.conf
+
+# Pre-start process
+ExecStartPre=-/usr/bin/env ip link add mv-service link bond0 type macvlan mode bridge
+
+# Start process
+ExecStart=/usr/bin/env ip netns add %I
+ExecStart=/usr/bin/env ip netns %I exec ip link set lo up
+ExecStart=/usr/bin/env ip link add mv0 link bond0 type macvlan mode bridge
+ExecStart=/usr/bin/env ip link set mv0 netns %I
+ExecStart=/usr/bin/env ip netns exec %I ip link set dev mv0 up
+{% if systemd_PrivateNetworkDHCP | bool%}
+ExecStart=-/usr/bin/env ip netns exec %I dhclient mv0 -v
+{% endif %}
+
+
+# Stop process
+ExecStop=/usr/bin/env ip netns delete %I
+
+
+[Install]
+WantedBy=multi-user.target

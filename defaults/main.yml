@@ -38,6 +38,7 @@ systemd_TasksAccounting: true
 systemd_PrivateTmp: false
 systemd_PrivateDevices: false
 systemd_PrivateNetwork: false
+systemd_PrivateNetworkDHCP: false
 systemd_PrivateUsers: false
 
 # Start service after a given target. This is here because we want to define common
